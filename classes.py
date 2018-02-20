@@ -152,7 +152,6 @@ class sf_account:
         else:
             self.created_at = timestamp
         
-        
     def write_account(self):
         out = {
               "id": str(self.id)
@@ -172,3 +171,109 @@ class sf_account:
         out = dict((k, v) for k, v in out.iteritems() if v not in ['None','nan','-'] )
         with nlj.open('data/outputs/accounts.json', 'a') as dst:
             dst.write(out)
+            
+class sf_opportunity:
+    def __init__(self
+                 , account_name=None, contact_id=None
+                 , amount=None, typ=None
+                 , date=None, timestamp=None):
+        
+        # typ > self.type ['New Business', 'Expansion', 'Contraction', 'Cancellation', 'Renewal']
+        # stage > self.stage ['1. Qualification', '2. Discovery', '3. Evaluation', '4. Approval Process', '5. Buying Process', '6. Deal' ]
+        
+        if account_name is None:
+            tmp = get_random_account()
+            self.account_name = tmp[0]
+        else:
+            self.account_name = account_name
+            
+        self.amount = amount if amount else generate_amount()
+        self.type = typ if typ else 'New Business'
+        self.account_id = hashlib.sha224(self.account_name).hexdigest()
+        self.name = self.type + ' - ' + self.account_name
+        self.is_closed = False
+        self.is_won = False
+        self.stage = '1. Qualification'
+        
+        if timestamp is None:
+            if date is None:
+                date = datetime.datetime.now().strftime("%Y-%m-%d")
+            seconds = generate_triangular_seconds()
+            self.created_at = datetime.datetime.strptime(date, "%Y-%m-%d") + datetime.timedelta(0,seconds)
+        else:
+            date = timestamp.strftime("%Y-%m-%d")
+            self.created_at = timestamp
+        self.id = hashlib.sha224(self.account_id+date+self.type).hexdigest()
+        self.close_date = get_close_date_estimate(self.created_at)
+
+    def update(self, date=None, new_value=None, attr=None):
+  ## NEED TO FINISH      
+  
+        old_value = getattr(self, attr)
+        if old_value != new_value:
+            setattr(self, attr, new_value)  
+            if date is None:
+                date = date if date else datetime.datetime.now().strftime("%Y-%m-%d")
+            seconds = generate_triangular_seconds()     
+            created_at = datetime.datetime.strptime(date, "%Y-%m-%d") + datetime.timedelta(0,seconds)
+    
+            opp_hist = opportunity_history(created_at = created_at
+                                          , field=attr
+                                          , old_value=old_value
+                                          , new_value=new_value
+                                          , source_id=self.id)
+            
+            return opp_hist
+        
+                            
+        
+    def write_opportunity(self):
+        out = {
+              "id": str(self.id)
+            , "account_name": str(self.account_name)
+            , "account_id": str(self.account_id)
+            , "created_at": str(self.created_at)
+            , "amount": int(self.amount)
+            , "name": str(self.name)
+            , "is_closed": str(self.is_closed)
+            , "is_won": str(self.is_won)
+            , "stage": str(self.stage)
+            , "close_date": str(self.close_date)
+            }
+        out = dict((k, v) for k, v in out.iteritems() if v not in ['None','nan','-'] )
+        with nlj.open('data/outputs/opportunities.json', 'a') as dst:
+            dst.write(out)
+
+
+#NEED TO CREATE CLASS FOR HISTORY
+class opportunity_history:
+    def __init__(self
+                  , created_at=None, field=None
+                  , old_value=None, new_value=None
+                  , source_id=None
+                          ):
+        self.created_at = created_at
+        self.field = field
+        self.old_value = old_value
+        self.new_value = new_value
+        self.source_id = source_id
+        self.id = hashlib.sha224(self.source_id+str(created_at)+self.field).hexdigest()
+    
+    def write_history(self):
+        out = {
+              "id": str(self.id)
+            , "field": str(self.field)
+            , "old_value": str(self.old_value)
+            , "created_at": str(self.created_at)
+            , "new_value": str(self.new_value)
+            , "source_id": str(self.source_id)
+            , "id": str(self.id)
+            }
+        out = dict((k, v) for k, v in out.iteritems() if v not in ['None','nan','-'] )
+        with nlj.open('data/outputs/opportunity_history.json', 'a') as dst:
+            dst.write(out)
+    
+    
+    
+    
+    

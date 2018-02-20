@@ -33,6 +33,15 @@ create_lead_or_contacts(20,'leads')
 convert_leads_by_id(convert_leads(not_converted=find_not_converted(), percent=0.1))
 create_accounts(names=find_accounts_to_create())
 
-
-
+tmp = sf_opportunity()
+tmp2 = tmp.update(attr='amount', new_value=1)
+tmp2.write_history()
+tmp2 = tmp.update(attr='stage', new_value='2. Discovery')
+tmp2.write_history()
+tmp2 = tmp.update(attr='stage', new_value='2. Discovery')
+tmp2.write_history()
+tmp2 = tmp.update(attr='is_won', new_value=True)
+tmp2.write_history()
+tmp2 = tmp.update(attr='is_closed', new_value=True)
+tmp2.write_history()
 

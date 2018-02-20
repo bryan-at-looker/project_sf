@@ -16,6 +16,7 @@ import datetime
 import newlinejson as nlj
 import math
 import random
+from calendar import monthrange 
 
 
 with open('helpers/config.json') as file:
@@ -25,8 +26,8 @@ with open('helpers/config.json') as file:
 # API URL .json at the end refers to the expected format of the output
 mockaroo_url = 'http://www.mockaroo.com/api/'
 # API key
-mockaroo_key = config.mockaroo_key  # your mockaroo key
-mockaroo_name_schema = '0c2c12f0'
+mockaroo_key = str(config['mockaroo_api'])  # your mockaroo key
+mockaroo_name_schema = str(config['mockaroo_name_schema'])
 
 rw = {}
 
@@ -47,6 +48,9 @@ def get_random_name():
 
 def generate_triangular_seconds():
     return int(random.triangular(high=86400, mode=42300))
+
+def generate_amount():
+    return int(random.triangular(low=config['amount_low'], high=config['amount_high'], mode=config['amount_mode']) / 1000) * 1000
     
 def find_account_in_company_csv(value=None):
     if not value:
@@ -55,6 +59,15 @@ def find_account_in_company_csv(value=None):
     if len(found) != 1:
         found = find_account_in_company_csv(get_random_account()[0])
     return found
+
+
+def get_close_date_estimate(dt=None):
+    offset = pd.tseries.offsets.BMonthEnd()
+    if dt:
+        dt = dt + datetime.timedelta(config['average_close'])
+        dt = offset.rollforward(datetime.datetime.strftime(dt, "%Y-%m-%d"))
+        return dt.to_pydatetime()
+    
 
 
 def create_lead_or_contacts(times=1, tp='leads', date=None):
